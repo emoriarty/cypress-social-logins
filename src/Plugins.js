@@ -161,7 +161,7 @@ async function baseLoginConnect(typeUsername, typePassword, authorizeApp, option
   )
 
   await page.goto(options.loginUrl)
-  await login({page, options})
+  options.loginSelector && (await login({page, options}))
 
   // Switch to Popup Window
   if (options.isPopup) {
