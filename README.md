@@ -30,6 +30,7 @@ Supported identity providers:
 | Google    | GoogleSocialLogin     |
 | GitHub    | GitHubSocialLogin     |
 | Microsoft | MicrosoftSocialLogin  | 
+| Amazon    | AmazonSocialLogin     |
 | Facebook  | TBD                   |
 | Twitter   | TBD                   |
 | LinkedIn  | TBD                   |
@@ -71,22 +72,26 @@ return cy.task('GoogleSocialLogin', socialLoginOptions).then(({cookies, lsd, ssd
 
 Options passed to the task include:
 
-| Option name          | Description                                                                                                                       | Example                                        |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| username             |                                                                                                                                   |
-| password             |                                                                                                                                   |
-| loginUrl             | The URL for the login page that includes the social network buttons                                                               | https://www.example.com/login                  |
-| args                 | string array which allows providing further arguments to puppeteer                                                                | `['--no-sandbox', '--disable-setuid-sandbox']` |
-| headless             | Whether to run puppeteer in headless mode or not                                                                                  | true                                           |
-| logs                 | Whether to log interaction with the loginUrl website & cookie data                                                                | false                                          |
-| loginSelector        | A selector on the page that defines the specific social network to use and can be clicked, such as a button or a link             | `'a[href="/auth/auth0/google-oauth2"]'`        |
-| postLoginSelector    | A selector on the post-login page that can be asserted upon to confirm a successful login                                         | `'.account-panel'`                             |
-| preLoginSelector     | a selector to find and click on before clicking on the login button (useful for accepting cookies)                                | `'.ind-cbar-right button'`                     |
-| loginSelectorDelay   | delay a specific amount of time before clicking on the login button, defaults to 250ms. Pass a boolean false to avoid completely. | `100`                                          |
-| getAllBrowserCookies | Whether to get all browser cookies instead of just ones with the domain of loginUrl                                               | true                                           |
-| isPopup              | boolean, is your google auth displayed like a popup                                                                               | true                                           |
-| popupDelay           | number, delay a specific milliseconds before popup is shown. Pass a falsy (false, 0, null, undefined, '') to avoid completely     | 2000                                           |
-| cookieDelay          | number, delay a specific milliseconds before get a cookies. Pass a falsy (false, 0, null,undefined,'') to avoid completely        | 100                                            |
+| Option name                 | Description                                                                                                                       | Example                                        |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| username                    |                                                                                                                                   |
+| password                    |                                                                                                                                   |
+| loginUrl                    | The URL for the login page that includes the social network buttons                                                               | https://www.example.com/login                  |
+| args                        | string array which allows providing further arguments to puppeteer                                                                | `['--no-sandbox', '--disable-setuid-sandbox']` |
+| headless                    | Whether to run puppeteer in headless mode or not                                                                                  | true                                           |
+| logs                        | Whether to log interaction with the loginUrl website & cookie data                                                                | false                                          |
+| loginSelector               | A selector on the page that defines the specific social network to use and can be clicked, such as a button or a link             | `'a[href="/auth/auth0/google-oauth2"]'`        |
+| postLoginSelector           | A selector on the post-login page that can be asserted upon to confirm a successful login                                         | `'.account-panel'`                             |
+| preLoginSelector            | a selector to find and click on before clicking on the login button (useful for accepting cookies)                                | `'.ind-cbar-right button'`                     |
+| preLoginSelectorIframe      | string a selector to find a iframe for the preLoginSelector                                                                       | `'div#consent iframe'`                         |
+| preLoginSelectorIframeDelay | number delay a specific ms after click on the preLoginSelector. Pass a falsy (false, 0, null, undefined, '') to avoid completely. | 2000                                           |
+| otpSecret                   | Secret for generating a otp based on OTPLIB                                                                                       | `'SECRET'`                                     |
+| loginSelectorDelay          | delay a specific amount of time before clicking on the login button, defaults to 250ms. Pass a boolean false to avoid completely. | `100`                                          |
+| getAllBrowserCookies        | Whether to get all browser cookies instead of just ones with the domain of loginUrl                                               | true                                           |
+| isPopup                     | boolean, is your google auth displayed like a popup                                                                               | true                                           |
+| popupDelay                  | number, delay a specific milliseconds before popup is shown. Pass a falsy (false, 0, null, undefined, '') to avoid completely     | 2000                                           |
+| cookieDelay                 | number, delay a specific milliseconds before get a cookies. Pass a falsy (false, 0, null,undefined,'') to avoid completely        | 100                                            |
+| postLoginClick              | Optional: a selector to find and click on after clicking on the login button                                                                | `#idSIButton9`                                 |
 
 ## Install
 
@@ -194,6 +199,17 @@ module.exports = (on, config) => {
 }
 ```
 
+## Using AmazonSocialLogin with OneTimePassword
+
+You need a amazon account with activated 2fa. The QR-Code is provided by amazon and contains a SECRET to
+calculate a OTP. This is mandatory due the enforcement of 2fa of new amazon-accounts. SMS or E-Mail is not supported.
+You can extract the Secret from the QR-Code:
+```
+otpauth://totp/Amazon%3ASomeUser%40Example?secret=IBU3VLM........&issuer=Amazon
+```
+You need to setup the account in amazon with GoogleAuthenticator or any password-manager which supports OTP. Further
+information here https://www.amazon.com/gp/help/customer/display.html?nodeId=GE6SLZ5J9GCNRW44
+
 # Troubleshooting
 
 ## Timeout while trying to enter username
@@ -283,9 +299,13 @@ If you're getting an error message such as:
 Error: module not found: "ws" from file ..... node_modules/puppeteer/lib/WebSocketTransport.js #17
 ```
 
-It may be due to the fact that you're requiring one of the exported plugin functions, such as `GoogleSocialLogin` in your spec file in addition to requiring it in `cypress/plugins/index.js`. Remove it from your spec file.
+It may be due to the fact that you're requiring one of the exported plugin functions, such as `GoogleSocialLogin` in your spec file in addition to requiring it in `cypress/plugins/index.js`. Remove it from your spec file, or from a `support/index.js` and make sure you export the `GoogleSocialLogin` function as a task only from the `/plugins/index.js` file.
 
 See discussion about [in this issue](https://github.com/lirantal/cypress-social-logins/issues/17).
+
+## Amazon OTP not accepted
+
+Please be aware of proper time on your machine. Make sure you are using ntp to be in sync.
 
 # Author
 
